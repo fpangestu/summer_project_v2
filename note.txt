@@ -1,0 +1,24 @@
+#Sort out the biggest contour (biggest area)
+            max_area = 0
+            max_index = -1
+            index = -1
+            box_position = {}
+            for i in contours:
+                area = cv2.contourArea(i)
+                index=index+1
+                if area > max_area :
+                    max_area = area
+                    max_index = index
+            
+            cnt = contours[max_index]
+            rect = cv2.minAreaRect(cnt)
+            (x, y), (width, height), angle = rect
+            box = cv2.boxPoints(rect)
+            box = np.int0(box)
+            frame = cv2.drawContours(frame, [box], 0, (0, 0, 255), 2)
+            str_object_name = "Box"
+            cv2.putText(frame, str_object_name, (box[0][0] - 5, box[0][1] - 5), 0, 0.3, (0, 255, 0))
+            cv2.circle(frame, (int(x), int(y)), 4, (0, 255, 0), -1)       # Draw circle in the middle of contour
+            str_object = str(round(x, 2)) + ", " + str(round(y, 2))
+            cv2.putText(frame, str_object, (int(x), int(y) + 10), 0, 0.3, (0, 0, 255))
+            box_position = (int(x), int(y))
