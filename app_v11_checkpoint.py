@@ -20,8 +20,6 @@ from kivy.uix.popup import Popup
 from kivy.graphics.texture import Texture
 from camera import Camera
 from robot import Robot
-sys.path.insert(0, 'D:/4_KULIAH_S2/Summer_Project/summer_project_v2/mediapipe')
-from mdp_main import Mediapipe
 
 ## GRID LAYOUT
 class MainWidget(GridLayout):
@@ -32,7 +30,6 @@ class MainWidget(GridLayout):
         self.marker_coordinate_id = {}
         self.coordinate_marker_for_robot = {}
         self.T = []
-        self.mediapipe = Mediapipe()
         self.camera = Camera()
         self.robot = Robot()
         self.command_queue = queue.Queue()
@@ -58,9 +55,9 @@ class MainWidget(GridLayout):
         self.camera_cv_obj.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.camera_cv_obj.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-        self.camera_cv_obj_2 = cv2.VideoCapture(2, cv2.CAP_DSHOW)
-        self.camera_cv_obj_2.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        self.camera_cv_obj_2.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        # self.camera_cv_obj_2 = cv2.VideoCapture('http://192.168.137.97:8080/video')
+        # self.camera_cv_obj_2.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        # self.camera_cv_obj_2.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         
         # Read data from save file
         self.camera_tvec_id = self.read_coor_from_file("camera_tvec_id")
@@ -102,19 +99,19 @@ class MainWidget(GridLayout):
         # Left Grid 1
         left_grid_1 = GridLayout(cols = 3, rows = 1)
 
-        left_grid_1_1 = GridLayout(cols = 1, rows = 1)
+        left_grid_1_1 = GridLayout(cols = 1, rows = 1, padding = 4)
         # left_grid_1_1.add_widget(Label(text = "Camera 1", size_hint_y=0.1, halign='left', valign='bottom'))
         self.image = Image()
         left_grid_1_1.add_widget(self.image)
         left_grid_1.add_widget(left_grid_1_1)
 
-        left_grid_1_2 = GridLayout(cols = 1, rows = 1)
+        left_grid_1_2 = GridLayout(cols = 1, rows = 1, padding = 2)
         # left_grid_1_2.add_widget(Label(text = "Camera 2"))
         self.image_2 = Image()
         left_grid_1_2.add_widget(self.image_2)
         left_grid_1.add_widget(left_grid_1_2)
 
-        left_grid_1_3 = GridLayout(cols = 1, rows = 1)
+        left_grid_1_3 = GridLayout(cols = 1, rows = 1, padding = 4)
         # left_grid_1_3.add_widget(Label(text = "Camera 3"))
         self.image_3 = Image()
         left_grid_1_3.add_widget(self.image_3)
@@ -481,15 +478,23 @@ class MainWidget(GridLayout):
             image texture (texture): OpenGL textures for Kivy images for Images Calibration 
         """
         gesture_status = ''
+        cmr_position = [350, 543]
         
         if (self.camera_calib_stat == 0):
             self.image.texture, gesture_status = self.camera.load_camera_1(self.camera_cv)
-            self.image_2.texture, obj_position, obj_texture = self.camera.load_camera_2(self.camera_cv_obj)
-            self.image_3.texture, box_position = self.camera.load_camera_3(self.camera_cv_obj)
+            self.image_2.texture, obj_position, obj_texture, tgt_position = self.camera.load_camera_2(self.camera_cv_obj)
+            self.image_3.texture, prob = self.camera.load_camera_3(self.camera_cv_obj)
         
             # print(f'Object Position: {obj_position}')
             # print(f'Box Position: {box_position}')
             # print(f'Object Texture: {obj_texture}')
+            # print(f'Probability: {prob}')
+            # target_position = {0: (0, 0), 1: (467, 235), 2: (385, 174), 3: (524, 140), 4: (437, 64)}
+            # coor_x, coor_y, coor_x_dest, coor_y_dest = self.camera.final_calculation(1, obj_position, target_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
+            # print(f'Object Coordinate: {(coor_x, coor_y)}')
+            
+            # coor = self.camera.test_calculation(1, self.marker_coordinate_id, self.coordinate_marker_for_robot, obj_position, self.T, self.camera_mtx, self.camera_dist, self.camera_tvec, self.coordinate_robot)
+            # print(coor)
 
             # Object GUI
             frame = cv2.imread(self.noobj)
@@ -504,13 +509,13 @@ class MainWidget(GridLayout):
             if (self.btn_robot_str.text == 'Stop'):
                 if (gesture_status != ''):
                     if(gesture_status == 'Gesture_1'):
-                        coor_x, coor_y, coor_x_dest, coor_y_dest = self.camera.final_calculation(1, obj_position, box_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
+                        coor_x, coor_y, coor_x_dest, coor_y_dest = self.camera.final_calculation(1, obj_position, tgt_position, cmr_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
                     elif(gesture_status == 'Gesture_2'):
-                        coor_x, coor_y, coor_x_dest, coor_y_dest = self.camera.final_calculation(2, obj_position, box_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
+                        coor_x, coor_y, coor_x_dest, coor_y_dest = self.camera.final_calculation(2, obj_position, tgt_position, cmr_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
                     elif(gesture_status == 'Gesture_3'):
-                        coor_x, coor_y, coor_x_dest, coor_y_dest = self.camera.final_calculation(3, obj_position, box_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
+                        coor_x, coor_y, coor_x_dest, coor_y_dest = self.camera.final_calculation(3, obj_position, tgt_position, cmr_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
                     elif(gesture_status == 'Gesture_4'):
-                        coor_x, coor_y, coor_x_dest, coor_y_dest = self.camera.final_calculation(4, obj_position, box_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
+                        coor_x, coor_y, coor_x_dest, coor_y_dest = self.camera.final_calculation(4, obj_position, tgt_position, cmr_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
                     else:
                         pass
                     print(f'X: {coor_x}, Y: {coor_y}')
@@ -797,7 +802,7 @@ class MainWidget(GridLayout):
     def move_robot(self, *args):
         if (len(self.coordinate_marker_for_robot) == 0):    # check if Transformation Matrix still not calculated
             # self.calculate_final_matrix()                   # Calculate Transformation Matrix
-            self.coordinate_marker_for_robot = self.camera.final_matrix(self.camera_tvec, self.coordinate_marker_for_robot, self.input_marker_id, self.T)
+            self.coordinate_marker_for_robot = self.camera.final_matrix(self.camera_tvec, self.coordinate_robot, self.marker_coordinate_id, self.T)
 
         self.robot.robot_test_move(self.input_marker_id.text, self.coordinate_marker_for_robot)
 

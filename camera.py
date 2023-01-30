@@ -7,14 +7,25 @@ import cv2
 import cv2.aruco as aruco
 import sys
 from kivy.graphics.texture import Texture
-
 sys.path.insert(0, 'D:/4_KULIAH_S2/Summer_Project/summer_project_v2/mediapipe')
 from mdp_main import Mediapipe
-from robot import Robot
+sys.path.insert(0, 'D:/4_KULIAH_S2/Summer_Project/summer_project_v2/activelearning')
+from ActiveLearning import ActiveLearningClassifier
+from DecisionModel import DecisionModel
+from Dataset import Dataset
+import tensorflow_datasets as tfds
+from PIL import Image
+
 
 class Camera:
     def __init__(self):
         self.mediapipe = Mediapipe()
+        
+        #active learning
+        model = DecisionModel()
+        ds = Dataset("./dataset/")
+
+        self.activeAgent = ActiveLearningClassifier(model, ds)
 
     def main(self):
         pass
@@ -30,12 +41,9 @@ class Camera:
         Returns:
             image texture (texture): OpenGL textures for Kivy images
         """
-        # self.camera_cv = cv2.VideoCapture(1, cv2.CAP_DSHOW)
-        # self.camera_cv.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        # self.camera_cv.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-
         ret, frame = camera_cv.read()   
         # self.image_frame = frame
+        # frame = cv2.imread('cardbox.jpg')
 
         # Hand Gesture
         mdp_frame, gesture_status = self.mediapipe.main(frame)
@@ -60,49 +68,72 @@ class Camera:
             1. image texture (texture): Image texture that contain area for placec object
             2. ROI of image (texture): Portioan of image that contain object
         """
-        if(camera_cv_obj.isOpened()):
-            ret, frame = camera_cv_obj.read()  
-            # frame = cv2.imread('match2.jpg')
-            h, w, channels = frame.shape
-            half = w//2
-            # this will be the second column
-            frame = frame[:, :half]  
+        # if(camera_cv_obj.isOpened()):
+        ret, frame = camera_cv_obj.read()  
+        # frame = cv2.imread('match+box.jpg')
 
-            frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)                                      # Convert into gray
+        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)                                      # Convert into gray
 
-            # Remove noise by blurring with a Gaussian filter ( kernel size = 7 )
-            img_blur = cv2.GaussianBlur(frame_gray, (7, 7), sigmaX=0, sigmaY=0)             
+        # Remove noise by blurring with a Gaussian filter ( kernel size = 7 )
+        img_blur = cv2.GaussianBlur(frame_gray, (7, 7), sigmaX=0, sigmaY=0)             
 
-            ###############     Threshold         ###############
-            # apply basic thresholding -- the first parameter is the image
-            # we want to threshold, the second value is is our threshold
-            # check; if a pixel value is greater than our threshold (in this case, 200), we set it to be *black, otherwise it is *white*
-            thresInv_adaptive = cv2.adaptiveThreshold(img_blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 6)
+        ###############     Threshold         ###############
+        # apply basic thresholding -- the first parameter is the image
+        # we want to threshold, the second value is is our threshold
+        # check; if a pixel value is greater than our threshold (in this case, 200), we set it to be *black, otherwise it is *white*
+        thresInv_adaptive = cv2.adaptiveThreshold(img_blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 6)
 
-            # Create small kernel for Erosion & Dilation
-            # Dilation used to makes objects more visible 
-            # Erosion used to removes floating pixels and thin lines so that only substantive objects remain
-            # We used Erosion & Dilation 7 times to get best output
-            small_kernel = np.ones((3, 3), np.uint8)
-            thresInv_adaptive=cv2.dilate(thresInv_adaptive, small_kernel, iterations=7)
-            thresInv_adaptive=cv2.erode(thresInv_adaptive, small_kernel, iterations=7)
+        # Create small kernel for Erosion & Dilation
+        # Dilation used to makes objects more visible 
+        # Erosion used to removes floating pixels and thin lines so that only substantive objects remain
+        # We used Erosion & Dilation 7 times to get best output
+        small_kernel = np.ones((3, 3), np.uint8)
+        thresInv_adaptive=cv2.dilate(thresInv_adaptive, small_kernel, iterations=7)
+        thresInv_adaptive=cv2.erode(thresInv_adaptive, small_kernel, iterations=7)
 
-            ###############     Find Contour          ###############
-            # Get shape of frame
-            h, w, c = frame.shape
-            c_number = 0
-            obj_position = {}
-            obj_texture = {}
-            # obj_id = 1
-            contours, hierarchy = cv2.findContours(thresInv_adaptive, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)         # Get the contours and the hierarchy of the object in the frame
-            for c in contours:
-                # Draw a minimum area rotared rectangle around ROI
-                # Input : Takes contours as input
-                # Output : Box2D structure contains the following detail (center(x, y), (width, height), angle of rotatino)
-                box = cv2.minAreaRect(c)                    
-                (x, y), (width, height), angle = box    
-                # Check if the ROI inside Box where we have to place the object 
-                if (int(width) > 45 and int(width) < 100 and int(height) > 45 and int(height) < 100):
+        ###############     Find Contour          ###############
+        # Get shape of frame
+        h, w, c = frame.shape
+        
+        # Create Box where we place the object
+        tgt_position = {}
+        top_left = (w//2, 20)
+        bottom_right = (w-20, h-75)
+        cv2.rectangle(frame, top_left, bottom_right, (255, 0, 0), 2)
+
+        # Create Box where we place the correct object
+        cv2.putText(frame, 'Correct Object', ((w//2)-150, (h//2)-50-10), 0, 0.3, (0, 0, 255))
+        center_cor = ((w//2)-85, h-212)
+        top_left_cor = ((w//2)-150, (h//2)-50)
+        bottom_right_cor = ((w//2)-20, h-125)
+        cv2.rectangle(frame, top_left_cor, bottom_right_cor, (0, 255, 0), 2)
+        cv2.circle(frame, center_cor, 4, (0, 255, 0), -1)
+        tgt_position[0] = center_cor
+
+        # Create Box where we place the faulty object
+        cv2.putText(frame, 'Faulty Object', ((w//2)-300, (h//2)-50-10), 0, 0.3, (0, 0, 255))
+        center_flt = ((w//2)-235, h-212)
+        top_left_flt = ((w//2)-300, (h//2)-50)
+        bottom_right_flt = ((w//2)-170, h-125)
+        cv2.rectangle(frame, top_left_flt, bottom_right_flt, (0, 0, 255), 2)
+        cv2.circle(frame, center_flt, 4, (0, 255, 0), -1)
+        tgt_position[1] = center_flt
+
+
+        c_number = 0
+        obj_position = {}
+        obj_texture = {}
+        # obj_id = 1
+        contours, hierarchy = cv2.findContours(thresInv_adaptive, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)         # Get the contours and the hierarchy of the object in the frame
+        for c in contours:
+            # Draw a minimum area rotared rectangle around ROI
+            # Input : Takes contours as input
+            # Output : Box2D structure contains the following detail (center(x, y), (width, height), angle of rotatino)
+            box = cv2.minAreaRect(c)                    
+            (x, y), (width, height), angle = box    
+            # Check if the ROI inside Box where we have to place the object 
+            if ((int(x) >= w//2) and (int(x) <= w-20) and (int(y) >= 20) and (int(y) <= h-75)):
+                if (int(width) > 40 and int(width) < 80 and int(height) > 40 and int(height) < 80):
                     c_number = c_number + 1
                     rect = cv2.boxPoints(box)                       # Convert the Box2D structure to 4 corner points 
                     box = np.int0(rect)                             # Converts 4 corner Points into integer type
@@ -120,25 +151,28 @@ class Camera:
                     frame_obj = frame[int(y-height*0.5):int(y+height*0.5), int(x-width*0.5):int(x+width*0.5)]
                     
                     # Show in the interface
-                    try:
-                        buffer = cv2.flip(frame_obj, 0).tostring()
-                    except:
-                        continue
-                    # if NoneType:
-                    #     continue
-                    # else:
+                    # try:
                     #     buffer = cv2.flip(frame_obj, 0).tostring()
+                    # except TypeError:
+                    #     continue
+                    if NoneType:
+                        continue
+                    else:
+                        buffer = cv2.flip(frame_obj, 0).tostring()
                     texture = Texture.create(size=(frame_obj.shape[1], frame_obj.shape[0]), colorfmt='bgr')
                     texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
                     obj_texture[c_number] = texture
+                else:
+                    obj_position[0] = (0, 0) 
 
-            # Convert frame into texture for Kivy
-            buffer = cv2.flip(frame, 0).tostring()
-            texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
-            texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
-            # self.image_2.texture = texture
+        # Convert frame into texture for Kivy
+        # frame = thresInv_adaptive
+        buffer = cv2.flip(frame, 0).tostring()
+        texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
+        texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
+        # self.image_2.texture = texture
 
-            return texture, obj_position, obj_texture
+        return texture, obj_position, obj_texture, tgt_position
 
     def load_camera_3(self, camera_cv_obj):
         """
@@ -152,70 +186,79 @@ class Camera:
             1. image texture (texture): Image texture that contain area for placec object
             2. ROI of image (texture): Portioan of image that contain object
         """
-        if(camera_cv_obj.isOpened()):
-            ret, frame = camera_cv_obj.read()  
-            # frame = cv2.imread('box3.jpg')
-            h, w, channels = frame.shape
-            half = w//2
-            # this will be the second column
-            frame = frame[:, half:]   
+        # ret, frame = camera_cv_obj.read()  
+        frame = cv2.imread('box1.jpg')
+        # prob = self.activeAgent.predict_or_request_label(frame)
+        buffer = cv2.flip(frame, 0).tostring()
+        texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
+        texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
 
-            # Find Color
-            # img_blur = cv2.GaussianBlur(frame, (5, 5), 20)
+        return texture, 1
+
+        # if(camera_cv_obj.isOpened()):
+        #     ret, frame = camera_cv_obj.read()  
+        #     # frame = cv2.imread('box3.jpg')
+        #     # h, w, channels = frame.shape
+        #     # half = w//2
+        #     # # this will be the second column
+        #     # frame = frame[:, half:]   
+
+        #     # Find Color
+        #     # img_blur = cv2.GaussianBlur(frame, (5, 5), 20)
             
-            frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)                                      # Convert into gray
+        #     # frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)                                      # Convert into gray
 
-            # lower bound and upper bound for Green color
-            lower_bound = np.array([5, 30, 30])	 
-            upper_bound = np.array([20, 255, 255])
+        #     # # lower bound and upper bound for Green color
+        #     # lower_bound = np.array([5, 30, 30])	 
+        #     # upper_bound = np.array([20, 255, 255])
 
-            # find the colors within the boundaries
-            mask = cv2.inRange(frame_hsv, lower_bound, upper_bound)
-            ###############     Remove Noise         ###############
-            # Create small kernel 
-            kernel = np.ones((7, 7), np.uint8)
+        #     # # find the colors within the boundaries
+        #     # mask = cv2.inRange(frame_hsv, lower_bound, upper_bound)
+        #     # ###############     Remove Noise         ###############
+        #     # # Create small kernel 
+        #     # kernel = np.ones((7, 7), np.uint8)
             
-            # Remove unnecessary noise from mask
-            mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-            mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        #     # # Remove unnecessary noise from mask
+        #     # mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+        #     # mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
 
             
-            # Segment only the detected region
-            segmented_img = cv2.bitwise_and(frame, frame, mask=mask)
+        #     # # Segment only the detected region
+        #     # segmented_img = cv2.bitwise_and(frame, frame, mask=mask)
 
-            # return mask
-            ###############     Find Contour          ###############
-            c_number = 0
-            box_position = {}
-            contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)         # Get the contours and the hierarchy of the object in the frame
+        #     # # return mask
+        #     # ###############     Find Contour          ###############
+        #     # c_number = 0
+        #     # box_position = {}
+        #     # contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)         # Get the contours and the hierarchy of the object in the frame
             
-            for i, c in enumerate(contours):
-                # if the contour has no other contours inside of it
-                if hierarchy[0][i][2] == -1 :
-                    # if the size of the contour is greater than a threshold
-                    if  cv2.contourArea(c) > 3000:
-                        box = cv2.minAreaRect(c)                    
-                        (x, y), (width, height), angle = box  
+        #     # for i, c in enumerate(contours):
+        #     #     # if the contour has no other contours inside of it
+        #     #     if hierarchy[0][i][2] == -1 :
+        #     #         # if the size of the contour is greater than a threshold
+        #     #         if  cv2.contourArea(c) > 3000:
+        #     #             box = cv2.minAreaRect(c)                    
+        #     #             (x, y), (width, height), angle = box  
 
-                        c_number += 1
-                        rect = cv2.boxPoints(box)
-                        box = np.int0(rect)
-                        frame = cv2.drawContours(frame, [box], 0, (0, 0, 255), 2)
-                        str_object_name = "Box " + str(c_number)
-                        cv2.putText(frame, str_object_name, (box[0][0] - 5, box[0][1] - 5), 0, 0.3, (0, 255, 0))
-                        cv2.circle(frame, (int(x), int(y)), 4, (0, 255, 0), -1)       # Draw circle in the middle of contour
-                        str_object = str(round(x, 2)) + ", " + str(round(y, 2))
-                        cv2.putText(frame, str_object, (int(x), int(y) + 10), 0, 0.3, (0, 0, 255))
-                        box_position[c_number] = (int(x), int(y))
+        #     #             c_number += 1
+        #     #             rect = cv2.boxPoints(box)
+        #     #             box = np.int0(rect)
+        #     #             frame = cv2.drawContours(frame, [box], 0, (0, 0, 255), 2)
+        #     #             str_object_name = "Box " + str(c_number)
+        #     #             cv2.putText(frame, str_object_name, (box[0][0] - 5, box[0][1] - 5), 0, 0.3, (0, 255, 0))
+        #     #             cv2.circle(frame, (int(x), int(y)), 4, (0, 255, 0), -1)       # Draw circle in the middle of contour
+        #     #             str_object = str(round(x, 2)) + ", " + str(round(y, 2))
+        #     #             cv2.putText(frame, str_object, (int(x), int(y) + 10), 0, 0.3, (0, 0, 255))
+        #     #             box_position[c_number] = (int(x), int(y))
 
-            # Convert frame into texture for Kivy
-            # return frame
-            buffer = cv2.flip(frame, 0).tostring()
-            texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
-            texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
-            # self.image_2.texture = texture
+        #     # Convert frame into texture for Kivy
+        #     # return frame
+        #     buffer = cv2.flip(frame, 0).tostring()
+        #     texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
+        #     texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
+        #     # self.image_2.texture = texture
             
-            return texture, box_position
+        #     return texture
 
     def load_camera_calib(self, camera_cv_obj):
         """
@@ -385,9 +428,9 @@ class Camera:
                 if i == j:
                     coordinate_marker_center_final.append(coordinate_marker_center[i])
 
-        print(f'Coordinate Camera: {coordinate_camera_final}')
-        print(f'Coordinate Robot: {coordinate_robot_final}')
-        print(f'Coordinate Marker Center: {coordinate_marker_center_final}')
+        # print(f'Coordinate Camera: {coordinate_camera_final}')
+        # print(f'Coordinate Robot: {coordinate_robot_final}')
+        # print(f'Coordinate Marker Center: {coordinate_marker_center_final}')
 
         T = np.dot(np.linalg.inv(coordinate_camera_final), coordinate_robot_final)
 
@@ -522,7 +565,7 @@ class Camera:
 
             return camera_tvec, camera_tvec_id, camera_tvec_coor, marker_coordinate_id, marker_id, marker_coordinate, inf_status_marker_coordinate, src
 
-    def final_calculation(self, position, obj_position, box_position, marker_coordinate_id, coordinate_marker_for_robot):
+    def final_calculation(self, position, obj_position, tgt_position, cmr_position, marker_coordinate_id, coordinate_marker_for_robot):
         """
         Calculating object coordinate in the frame for robot cordiate 
 
@@ -558,10 +601,12 @@ class Camera:
         corr_obj = obj_position[position]
         coor_new = [corr_obj[0], corr_obj[1]]
 
-        # Box Coordinate
-        coor_box = box_position[position]
-        coor_box_new = [coor_box[0], coor_box[1]]
+        # Camera Coordinate
+        coor_correct = tgt_position[0]
+        coor_faulty = tgt_position[1]
+        
 
+        # Object Position
         # Y Coordinate
         if(coor_new[0] > coor_marker1[0]):
             coor_y = abs(coor_marker1[0] - coor_new[0])
@@ -573,18 +618,6 @@ class Camera:
             coor_y = coor_y * diff_y
             coor_y = coor_rbt1[1] + coor_y
             # print(coor)
-            
-        if(coor_box_new[0] > coor_marker1[0]):
-            # Destination Coordinate
-            coor_y_dest = abs(coor_marker1[0] - coor_box_new[0])
-            coor_y_dest = coor_y_dest * diff_y
-            coor_y_dest = coor_rbt1[1] - coor_y_dest
-        else:
-            # Destination Coordinate
-            coor_y_dest = abs(coor_marker1[0] - coor_box_new[0])
-            coor_y_dest = coor_y_dest * diff_y
-            coor_y_dest = coor_rbt1[1] + coor_y_dest
-
 
         # X Coordinate
         if(coor_new[1] > coor_marker1[1]):
@@ -598,28 +631,165 @@ class Camera:
             coor_x = coor_rbt1[0] + coor_x
             # print(coor)
 
-
-        if(coor_box_new[1] > coor_marker1[1]):
-            # Destination Coordinate
-            coor_x_dest = abs(coor_marker1[1] - coor_box_new[1])
-            coor_x_dest = coor_x_dest * diff_x
-            coor_x_dest = coor_rbt1[0] - coor_x_dest
+        # Camera Position
+        # Y Coordinate
+        if(cmr_position[0] > coor_marker1[0]):
+            cmr_coor_y = abs(coor_marker1[0] - cmr_position[0])
+            cmr_coor_y = cmr_coor_y * diff_y
+            cmr_coor_y = coor_rbt1[1] - cmr_coor_y
+            # print(coor)
         else:
-            # Destination Coordinate
-            coor_x_dest = abs(coor_marker1[1] - coor_box_new[1])
-            coor_x_dest = coor_x_dest * diff_x
-            coor_x_dest = coor_rbt1[0] + coor_x_dest
+            cmr_coor_y = abs(coor_marker1[0] - cmr_position[0])
+            cmr_coor_y = cmr_coor_y * diff_y
+            cmr_coor_y = coor_rbt1[1] + cmr_coor_y
+            # print(coor)
 
-        return coor_x, coor_y, coor_x_dest, coor_y_dest*-1
+        # X Coordinate
+        if(cmr_position[1] > coor_marker1[1]):
+            cmr_coor_x = abs(coor_marker1[1] - cmr_position[1])
+            cmr_coor_x = cmr_coor_x * diff_x
+            cmr_coor_x = coor_rbt1[0] - cmr_coor_x
+            # print(coor)
+        else:
+            cmr_coor_x = abs(coor_marker1[1] - cmr_position[1])
+            cmr_coor_x = cmr_coor_x * diff_x
+            cmr_coor_x = coor_rbt1[0] + cmr_coor_x
+            # print(coor)
+
+        # Target Position
+        # Y Coordinate
+        if(coor_correct[0] > coor_marker1[0]):
+            correct_coor_y = abs(coor_marker1[0] - coor_correct[0])
+            correct_coor_y = correct_coor_y * diff_y
+            correct_coor_y = coor_rbt1[1] - correct_coor_y
+            # print(coor)
+        else:
+            correct_coor_y = abs(coor_marker1[0] - coor_correct[0])
+            correct_coor_y = correct_coor_y * diff_y
+            correct_coor_y = coor_rbt1[1] + correct_coor_y
+            # print(coor)
+
+        # X Coordinate
+        if(coor_correct[1] > coor_marker1[1]):
+            correct_coor_x = abs(coor_marker1[1] - coor_correct[1])
+            correct_coor_x = correct_coor_x * diff_x
+            correct_coor_x = coor_rbt1[0] - correct_coor_x
+            # print(coor)
+        else:
+            correct_coor_x = abs(coor_marker1[1] - coor_correct[1])
+            correct_coor_x = correct_coor_x * diff_x
+            correct_coor_x = coor_rbt1[0] + correct_coor_x
+            # print(coor)
+
+        # Y Coordinate
+        if(coor_faulty[0] > coor_marker1[0]):
+            faulty_coor_y = abs(coor_marker1[0] - coor_faulty[0])
+            faulty_coor_y = faulty_coor_y * diff_y
+            faulty_coor_y = coor_rbt1[1] - faulty_coor_y
+            # print(coor)
+        else:
+            faulty_coor_y = abs(coor_marker1[0] - coor_faulty[0])
+            faulty_coor_y = faulty_coor_y * diff_y
+            faulty_coor_y = coor_rbt1[1] + faulty_coor_y
+            # print(coor)
+
+        # X Coordinate
+        if(coor_faulty[1] > coor_marker1[1]):
+            faulty_coor_x = abs(coor_marker1[1] - coor_faulty[1])
+            faulty_coor_x = faulty_coor_x * diff_x
+            faulty_coor_x = coor_rbt1[0] - faulty_coor_x
+            # print(coor)
+        else:
+            faulty_coor_x = abs(coor_marker1[1] - coor_faulty[1])
+            faulty_coor_x = faulty_coor_x * diff_x
+            faulty_coor_x = coor_rbt1[0] + faulty_coor_x
+            # print(coor)
+        
+        
+        return coor_x, coor_y, correct_coor_x, correct_coor_y
+
+    def test_calculation(self, position, marker_coordinate_id, coordinate_marker_for_robot, obj_position, T, camera_matrix, dist_coeffs, camera_tvec, coordinate_robot):
+        if (len(T) == 0):
+            T = self.transformation_matrix(camera_tvec, coordinate_robot, marker_coordinate_id) 
+        
+        coor_marker = np.array([marker_coordinate_id[10], marker_coordinate_id[11], marker_coordinate_id[12], marker_coordinate_id[13], marker_coordinate_id[14], marker_coordinate_id[15], marker_coordinate_id[16], marker_coordinate_id[17], marker_coordinate_id[18]])
+        coor_rbt = np.array([coordinate_marker_for_robot[10], coordinate_marker_for_robot[11], coordinate_marker_for_robot[12], coordinate_marker_for_robot[13], coordinate_marker_for_robot[14], coordinate_marker_for_robot[15], coordinate_marker_for_robot[16], coordinate_marker_for_robot[17], coordinate_marker_for_robot[18]])
+        # print(f'shape marker coordinate: {coor_marker.shape}')
+        # print(f'shape robot coordinate: {coor_rbt.shape}')
+        # print(f'camera matrix: {np.array(camera_matrix)}')
+        # print(f'camera dist: {np.array(dist_coeffs)}')
+
+        _, rvec, tvec = cv2.solvePnP(coor_rbt, coor_marker, np.array(camera_matrix), np.array(dist_coeffs))
+
+        
+        # coor_rbt = coor_rbt.reshape(-1, 1, 3)
+        # coor_marker = coor_marker.reshape(-1, 1, 2)
+        # Object Coordinate
+        corr_obj = obj_position[position]
+        coor_new = np.array([corr_obj[0], corr_obj[1], 1])
+        R, _ = cv2.Rodrigues(rvec)
+        # T = np.array([tvec[0][0], tvec[1][0], tvec[2][0]])
+        return R @ coor_new + T
+
+    def click_event(self, event, x, y, flags, params):
+        # checking for left mouse clicks
+        if event == cv2.EVENT_LBUTTONDOWN:
+    
+            # displaying the coordinates
+            # on the Shell
+            print(x, ' ', y)
+    
+            # displaying the coordinates
+            # on the image window
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            cv2.putText(img, str(x) + ',' +
+                        str(y), (x,y), font,
+                        1, (255, 0, 0), 2)
+            cv2.imshow('image', img)
+    
+        # checking for right mouse clicks     
+        if event==cv2.EVENT_RBUTTONDOWN:
+    
+            # displaying the coordinates
+            # on the Shell
+            print(x, ' ', y)
+    
+            # displaying the coordinates
+            # on the image window
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            b = img[y, x, 0]
+            g = img[y, x, 1]
+            r = img[y, x, 2]
+            cv2.putText(img, str(b) + ',' +
+                        str(g) + ',' + str(r),
+                        (x,y), font, 1,
+                        (255, 255, 0), 2)
+            cv2.imshow('image', img)
 
 if __name__ == '__main__':
     camera_cv= cv2.VideoCapture(1, cv2.CAP_DSHOW)
     camera_cv.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     camera_cv.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-
+    ret, img = camera_cv.read()
     camera = Camera()
-    frame = camera.load_camera_3(camera_cv)
-    cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-    cv2.imshow('image', frame)
+    # frame = camera.load_camera_3(camera_cv)
+    # cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+    # cv2.imshow('image', frame)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+    # reading the image
+    # img = cv2.imread('lena.jpg', 1)
+  
+    # displaying the image
+    cv2.imshow('image', img)
+  
+    # setting mouse handler for the image
+    # and calling the click_event() function
+    cv2.setMouseCallback('image', camera.click_event)
+  
+    # wait for a key to be pressed to exit
     cv2.waitKey(0)
+  
+    # close the window
     cv2.destroyAllWindows()

@@ -130,14 +130,14 @@ class Robot:
             
             # X, Y, Z, SPEED
             # z_2 = z + 150
-            self.move_robot(x, y, z, speed=800, wait=True)                       # Send coordinate to robot
+            self.move_robot(x, y, z, speed=800, wait=False)                       # Send coordinate to robot
             time.sleep(1)    
             
             # slide down to Z position
             status = False
             while (status != True):
                 z = z - 1
-                self.move_robot(x, y, z, speed=400, wait=True)
+                self.move_robot(x, y, z, speed=400, wait=False)
                 status = self.swift.get_limit_switch()                                                   # delay for 2 second
             time.sleep(2)
             self.default_position()                                             # reset robot position
