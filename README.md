@@ -1,5 +1,5 @@
 # Summer Project
-| ![Interface of Application](https://github.com/mahasiswateladan/summer_project/blob/main/img/giiiffffff.gif) |
+| ![Interface of Application](https://github.com/mahasiswateladan/summer_project_v2/blob/main/img/giiiffffff.gif) |
 |:--:| 
 | *Interface of Application* |
 
@@ -98,7 +98,7 @@ To do hand gesture recognition, we used the [MediaPipe Python framework](https:/
 
 # Tutorial
 ## Introduction
-| ![Application Interface](https://github.com/mahasiswateladan/summer_project/blob/main/img/Screenshot%20(834).png) |
+| ![Application Interface](https://github.com/mahasiswateladan/summer_project_v2/blob/main/img/Screenshot%20(834).png) |
 |:--:| 
 | *Figure 1. Application Interface* |
 
@@ -122,7 +122,7 @@ This step aims to determine the geometric parameters of the image formation proc
  2. Download the ArUco board from this [link](https://github.com/mahasiswateladan/summer_project/blob/main/img/aruco_marker.pdf) and print it on the A4 paper
  3. Start the application and click **Calibrate Camera** button in the top right corner
 
-| ![](https://github.com/mahasiswateladan/summer_project/blob/main/img/figure3.PNG) |
+| ![](https://github.com/mahasiswateladan/summer_project_v2/blob/main/img/figure3.PNG) |
 |:--:| 
 | *Figure 3. Camera Calibration Interface* |
 
@@ -177,7 +177,7 @@ This step aims to determine the geometric parameters of the image formation proc
 
 12. Don’t forget to click the **Save** button in the bottom left corner before you close the interface; this step is important to save all the parameters into a txt file, so we don’t have to calibrate the camera again the next time as long as the camera position and robot position doesn’t change.
 
-| ![](https://github.com/mahasiswateladan/summer_project/blob/main/img/figure11.PNG) |
+| ![](https://github.com/mahasiswateladan/summer_project_v2/blob/main/img/figure11.PNG) |
 |:--:| 
 | *Figure 11. Camera Calibration Status* |
 
@@ -188,14 +188,14 @@ After you calibrate the camera, one small step you have to do before starting to
  1. Connect the robot to the computer or laptop and turn on the robot
  2. Click **Connect Robot** button in the middle right of the application
 
-| ![](https://github.com/mahasiswateladan/summer_project/blob/main/img/figure12.PNG) |
+| ![](https://github.com/mahasiswateladan/summer_project_v2/blob/main/img/figure12.PNG) |
 |:--:| 
 | *Figure 12. Connect Robot Button* |
 
 3. If the robot successfully connected with the application, then the information of the robot will be shown in the interface.
 4. If the information doesn’t show after you click the button, the application can’t recognize the robot. Try to turn off the robot and repeat the step.
 
-| ![](https://github.com/mahasiswateladan/summer_project/blob/main/img/figure13.PNG) |
+| ![](https://github.com/mahasiswateladan/summer_project_v2/blob/main/img/figure13.PNG) |
 |:--:| 
 | *Figure 13. Robot Information* |
 
@@ -203,7 +203,7 @@ After you calibrate the camera, one small step you have to do before starting to
 This step aims to get the robot coordinate of the marker we choose. We will select four of the markers in every corner of the ArUco board. After we get the robot coordinate, we will calculate the transformation matrix from the robot coordinate and marker coordinate in the frame. Follow this step to get the robot coordinate:
 1. Click the **Robot Calibration** button in the middle right of the application.
 
-| ![](https://github.com/mahasiswateladan/summer_project/blob/main/img/figure14.PNG) |
+| ![](https://github.com/mahasiswateladan/summer_project_v2/blob/main/img/figure14.PNG) |
 |:--:| 
 | *Figure 14. Robot Calibration Button* |
 
@@ -238,7 +238,7 @@ This step aims to get the robot coordinate of the marker we choose. We will sele
 10. Repeat steps four to nine for three markers left.
 11. After you get the market ID and the coordinate, don’t forget to click the **Save** button in the bottom left corner before you close the interface; this step is important to save all the parameters into a txt file, so we don’t have to calibrate the robot again the next time as long as the marker position and robot position doesn’t change
 
-| ![](https://github.com/mahasiswateladan/summer_project/blob/main/img/figure19.PNG) |
+| ![](https://github.com/mahasiswateladan/summer_project_v2/blob/main/img/figure19.PNG) |
 |:--:| 
 | *Figure 19. Robot Calibration Status* |
 
@@ -265,7 +265,7 @@ This step is mandatory for you to do because, in this step, we will test our cal
 ## Result
 After you Calibrate the Camera, Robot and Test it, you can finally try to move the object using hand gestures. As you can see in Figure 22, the first camera can recognize the user's hand gesture which we will use as a command for the robot, and the second camera will identify the object inside the blue area in the frame. At the bottom of the application is information about which object the application can identify and which hand gesture we must show to move it. There is a form and button for every hand gesture and object. **You must fill the form with the object's height (in millimeters)**. There is a button as an alternative if the robot does move while you give a hand gesture.
 
-| ![](https://github.com/mahasiswateladan/summer_project/blob/main/img/figure22.PNG) |
+| ![](https://github.com/mahasiswateladan/summer_project_v2/blob/main/img/figure22.PNG) |
 |:--:| 
 | *Figure 22. Application Interface* |
 

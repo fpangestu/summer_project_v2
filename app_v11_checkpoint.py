@@ -55,9 +55,9 @@ class MainWidget(GridLayout):
         self.camera_cv_obj.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.camera_cv_obj.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-        # self.camera_cv_obj_2 = cv2.VideoCapture('http://192.168.137.97:8080/video')
-        # self.camera_cv_obj_2.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        # self.camera_cv_obj_2.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        self.camera_cv_obj_2 = cv2.VideoCapture('http://192.168.137.97:8080/video')
+        self.camera_cv_obj_2.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.camera_cv_obj_2.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         
         # Read data from save file
         self.camera_tvec_id = self.read_coor_from_file("camera_tvec_id")
@@ -478,12 +478,11 @@ class MainWidget(GridLayout):
             image texture (texture): OpenGL textures for Kivy images for Images Calibration 
         """
         gesture_status = ''
-        cmr_position = [350, 543]
         
         if (self.camera_calib_stat == 0):
             self.image.texture, gesture_status = self.camera.load_camera_1(self.camera_cv)
             self.image_2.texture, obj_position, obj_texture, tgt_position = self.camera.load_camera_2(self.camera_cv_obj)
-            self.image_3.texture, prob = self.camera.load_camera_3(self.camera_cv_obj)
+            self.image_3.texture, prob = self.camera.load_camera_3(self.camera_cv_obj_2)
         
             # print(f'Object Position: {obj_position}')
             # print(f'Box Position: {box_position}')
@@ -501,6 +500,7 @@ class MainWidget(GridLayout):
             buffer = cv2.flip(frame, 0).tostring()
             texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
             texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
+
             self.object_1.texture = obj_texture.get(1, texture)
             self.object_2.texture = obj_texture.get(2, texture)
             self.object_3.texture = obj_texture.get(3, texture)
@@ -509,22 +509,27 @@ class MainWidget(GridLayout):
             if (self.btn_robot_str.text == 'Stop'):
                 if (gesture_status != ''):
                     if(gesture_status == 'Gesture_1'):
-                        coor_x, coor_y, coor_x_dest, coor_y_dest = self.camera.final_calculation(1, obj_position, tgt_position, cmr_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
+                        coor_x, coor_y, cmr_coor_x, cmr_coor_y, correct_coor_x, correct_coor_y, faulty_coor_x, faulty_coor_y = self.camera.final_calculation(1, obj_position, tgt_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
                     elif(gesture_status == 'Gesture_2'):
-                        coor_x, coor_y, coor_x_dest, coor_y_dest = self.camera.final_calculation(2, obj_position, tgt_position, cmr_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
+                        coor_x, coor_y, cmr_coor_x, cmr_coor_y, correct_coor_x, correct_coor_y, faulty_coor_x, faulty_coor_y = self.camera.final_calculation(2, obj_position, tgt_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
                     elif(gesture_status == 'Gesture_3'):
-                        coor_x, coor_y, coor_x_dest, coor_y_dest = self.camera.final_calculation(3, obj_position, tgt_position, cmr_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
+                        coor_x, coor_y, cmr_coor_x, cmr_coor_y, correct_coor_x, correct_coor_y, faulty_coor_x, faulty_coor_y = self.camera.final_calculation(3, obj_position, tgt_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
                     elif(gesture_status == 'Gesture_4'):
-                        coor_x, coor_y, coor_x_dest, coor_y_dest = self.camera.final_calculation(4, obj_position, tgt_position, cmr_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
+                        coor_x, coor_y, cmr_coor_x, cmr_coor_y, correct_coor_x, correct_coor_y, faulty_coor_x, faulty_coor_y = self.camera.final_calculation(4, obj_position, tgt_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
                     else:
                         pass
-                    print(f'X: {coor_x}, Y: {coor_y}')
-                    print(f'X dest: {coor_x_dest}, Y dest: {coor_y_dest}')
+                    print(f'Object Coordinate X: {coor_x}, Y: {coor_y}')
+                    print(f'Camera Coordinate X: {cmr_coor_x}, Y: {cmr_coor_y}')
+                    print(f'Corect Coordinate X: {correct_coor_x}, Y: {correct_coor_y}')
+                    print(f'Faulty Coordinate X: {faulty_coor_x}, Y: {faulty_coor_y}')
+                    # print(f'X dest: {coor_x_dest}, Y dest: {coor_y_dest}')
                     
                     #calculate coorx and y for box (box_position)
                     # self.command_queue.put(self.robot.move_object(round(coor_x, 4), round(coor_y, 4), round(coor_x_dest, 4), round(coor_y_dest, 4)))
-                    self.robot.move_object(round(coor_x, 4), round(coor_y, 4), round(coor_x_dest, 4), round(coor_y_dest, 4))
+                    status = self.robot.move_object(round(coor_x, 4), round(coor_y, 4), round(cmr_coor_x, 4), round(cmr_coor_y, 4), round(correct_coor_x, 4), round(correct_coor_y, 4), round(faulty_coor_x, 4), round(faulty_coor_y, 4))
+                    print(status)
                     gesture_status = ''
+                gesture_status = ''
         elif(self.camera_calib_stat == 1):
             self.image_calibration.texture = self.camera.load_camera_calib(self.camera_cv_obj)
         else:

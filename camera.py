@@ -107,7 +107,7 @@ class Camera:
         top_left_cor = ((w//2)-150, (h//2)-50)
         bottom_right_cor = ((w//2)-20, h-125)
         cv2.rectangle(frame, top_left_cor, bottom_right_cor, (0, 255, 0), 2)
-        cv2.circle(frame, center_cor, 4, (0, 255, 0), -1)
+        # cv2.circle(frame, center_cor, 4, (0, 255, 0), -1)
         tgt_position[0] = center_cor
 
         # Create Box where we place the faulty object
@@ -116,8 +116,17 @@ class Camera:
         top_left_flt = ((w//2)-300, (h//2)-50)
         bottom_right_flt = ((w//2)-170, h-125)
         cv2.rectangle(frame, top_left_flt, bottom_right_flt, (0, 0, 255), 2)
-        cv2.circle(frame, center_flt, 4, (0, 255, 0), -1)
+        # cv2.circle(frame, center_flt, 4, (0, 255, 0), -1)
         tgt_position[1] = center_flt
+
+        # Create Box where we place the Camera
+        cv2.putText(frame, 'Camera', (w-110-45, h-125-45-10), 0, 0.3, (0, 0, 255))
+        center_flt = (w-110,  h-125)
+        top_left_flt = (center_flt[0]-25, center_flt[1]-45)
+        bottom_right_flt = (center_flt[0]+65, center_flt[1]+45)
+        cv2.rectangle(frame, top_left_flt, bottom_right_flt, (0, 0, 255), 2)
+        # cv2.circle(frame, center_flt, 4, (0, 255, 0), -1)
+        tgt_position[2] = center_flt
 
 
         c_number = 0
@@ -151,19 +160,23 @@ class Camera:
                     frame_obj = frame[int(y-height*0.5):int(y+height*0.5), int(x-width*0.5):int(x+width*0.5)]
                     
                     # Show in the interface
+                    if frame_obj is not None:
+                        buffer = cv2.flip(frame_obj, 0).tobytes()
+                    else:
+                        continue
                     # try:
                     #     buffer = cv2.flip(frame_obj, 0).tostring()
                     # except TypeError:
                     #     continue
-                    if NoneType:
-                        continue
-                    else:
-                        buffer = cv2.flip(frame_obj, 0).tostring()
+                    # if NoneType:
+                    #     continue
+                    # else:
+                    #     buffer = cv2.flip(frame_obj, 0).tostring()
                     texture = Texture.create(size=(frame_obj.shape[1], frame_obj.shape[0]), colorfmt='bgr')
                     texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
                     obj_texture[c_number] = texture
-                else:
-                    obj_position[0] = (0, 0) 
+                # else:
+                #     obj_position[0] = (0, 0) 
 
         # Convert frame into texture for Kivy
         # frame = thresInv_adaptive
@@ -186,8 +199,8 @@ class Camera:
             1. image texture (texture): Image texture that contain area for placec object
             2. ROI of image (texture): Portioan of image that contain object
         """
-        # ret, frame = camera_cv_obj.read()  
-        frame = cv2.imread('box1.jpg')
+        ret, frame = camera_cv_obj.read()  
+        # frame = cv2.imread('box1.jpg')
         # prob = self.activeAgent.predict_or_request_label(frame)
         buffer = cv2.flip(frame, 0).tostring()
         texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
@@ -565,7 +578,7 @@ class Camera:
 
             return camera_tvec, camera_tvec_id, camera_tvec_coor, marker_coordinate_id, marker_id, marker_coordinate, inf_status_marker_coordinate, src
 
-    def final_calculation(self, position, obj_position, tgt_position, cmr_position, marker_coordinate_id, coordinate_marker_for_robot):
+    def final_calculation(self, position, obj_position, tgt_position, marker_coordinate_id, coordinate_marker_for_robot):
         """
         Calculating object coordinate in the frame for robot cordiate 
 
@@ -601,9 +614,10 @@ class Camera:
         corr_obj = obj_position[position]
         coor_new = [corr_obj[0], corr_obj[1]]
 
-        # Camera Coordinate
+        # Coordinate
         coor_correct = tgt_position[0]
         coor_faulty = tgt_position[1]
+        coor_cmr = tgt_position[2]
         
 
         # Object Position
@@ -633,25 +647,25 @@ class Camera:
 
         # Camera Position
         # Y Coordinate
-        if(cmr_position[0] > coor_marker1[0]):
-            cmr_coor_y = abs(coor_marker1[0] - cmr_position[0])
+        if(coor_cmr[0] > coor_marker1[0]):
+            cmr_coor_y = abs(coor_marker1[0] - coor_cmr[0])
             cmr_coor_y = cmr_coor_y * diff_y
             cmr_coor_y = coor_rbt1[1] - cmr_coor_y
             # print(coor)
         else:
-            cmr_coor_y = abs(coor_marker1[0] - cmr_position[0])
+            cmr_coor_y = abs(coor_marker1[0] - coor_cmr[0])
             cmr_coor_y = cmr_coor_y * diff_y
             cmr_coor_y = coor_rbt1[1] + cmr_coor_y
             # print(coor)
 
         # X Coordinate
-        if(cmr_position[1] > coor_marker1[1]):
-            cmr_coor_x = abs(coor_marker1[1] - cmr_position[1])
+        if(coor_cmr[1] > coor_marker1[1]):
+            cmr_coor_x = abs(coor_marker1[1] - coor_cmr[1])
             cmr_coor_x = cmr_coor_x * diff_x
             cmr_coor_x = coor_rbt1[0] - cmr_coor_x
             # print(coor)
         else:
-            cmr_coor_x = abs(coor_marker1[1] - cmr_position[1])
+            cmr_coor_x = abs(coor_marker1[1] - coor_cmr[1])
             cmr_coor_x = cmr_coor_x * diff_x
             cmr_coor_x = coor_rbt1[0] + cmr_coor_x
             # print(coor)
@@ -706,7 +720,7 @@ class Camera:
             # print(coor)
         
         
-        return coor_x, coor_y, correct_coor_x, correct_coor_y
+        return coor_x, coor_y, cmr_coor_x, cmr_coor_y, correct_coor_x, correct_coor_y, faulty_coor_x, faulty_coor_y
 
     def test_calculation(self, position, marker_coordinate_id, coordinate_marker_for_robot, obj_position, T, camera_matrix, dist_coeffs, camera_tvec, coordinate_robot):
         if (len(T) == 0):
@@ -767,11 +781,20 @@ class Camera:
             cv2.imshow('image', img)
 
 if __name__ == '__main__':
-    camera_cv= cv2.VideoCapture(1, cv2.CAP_DSHOW)
+    camera_cv= cv2.VideoCapture('http://192.168.137.97:8080/video')
     camera_cv.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     camera_cv.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-    ret, img = camera_cv.read()
-    camera = Camera()
+    
+    while True:
+        ret, img = camera_cv.read()
+        cv2.imshow('image', img)
+        # wait for a key to be pressed to exit
+        cv2.waitKey(0)
+    
+        # close the window
+        cv2.destroyAllWindows()
+
+    # camera = Camera()
     # frame = camera.load_camera_3(camera_cv)
     # cv2.namedWindow('image', cv2.WINDOW_NORMAL)
     # cv2.imshow('image', frame)
@@ -781,15 +804,15 @@ if __name__ == '__main__':
     # reading the image
     # img = cv2.imread('lena.jpg', 1)
   
-    # displaying the image
-    cv2.imshow('image', img)
+    # # displaying the image
+    # cv2.imshow('image', img)
   
-    # setting mouse handler for the image
-    # and calling the click_event() function
-    cv2.setMouseCallback('image', camera.click_event)
+    # # setting mouse handler for the image
+    # # and calling the click_event() function
+    # cv2.setMouseCallback('image', camera.click_event)
   
-    # wait for a key to be pressed to exit
-    cv2.waitKey(0)
+    # # wait for a key to be pressed to exit
+    # cv2.waitKey(0)
   
-    # close the window
-    cv2.destroyAllWindows()
+    # # close the window
+    # cv2.destroyAllWindows()

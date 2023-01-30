@@ -56,7 +56,7 @@ class Robot:
 
         self.swift.set_wrist(90)
 
-    def move_object(self, x_start, y_start, x_end, y_end, z=50, speed=800, wait=True):
+    def move_object(self, x_start, y_start, x_cmr, y_cmr, x_corect, y_corect, x_faulty, y_faulty, z=120, speed=1500, wait=True):
         """
         Move object from original position to desire position
 
@@ -74,7 +74,10 @@ class Robot:
             Robot coordinate (X, Y, Z)
         """
         # X, Y, Z, SPEED
-        # goto X, Y position
+        
+        # Go to object
+        print('Go to Object')
+        print(f'X: {x_start}, Y: {y_start}')
         self.move_robot(x_start, y_start, z, speed=speed, wait=wait)
         time.sleep(1)
 
@@ -87,30 +90,45 @@ class Robot:
             status = self.swift.get_limit_switch()
 
         # turn on pump
+        time.sleep(1)
         self.pump(True)
         time.sleep(1)
         # self.swift.set_position(self.robot_parkir[0], self.robot_parkir[1], self.robot_parkir[2], speed=speed, wait=wait)
         self.move_robot(x_start, y_start, z, speed=speed, wait=wait)
         time.sleep(1)
 
-        # X, Y, Z, SPEED
-        self.move_robot(x_end, y_end, z, speed=speed, wait=wait)
+        # Go to Camera
+        print('Go to Camera')
+        print(f'X: {x_cmr}, Y: {y_cmr}')
+        self.move_robot(x_cmr, y_cmr, z, speed=speed, wait=wait)
+        time.sleep(5)
+
+        ## Check Object
+
+
+        # Go to Destination
+        self.move_robot(200, 0, z, speed=speed, wait=wait)
+        print('Go to Destination')
+        print(f'X: {x_corect}, Y: {y_corect}')
+        self.move_robot(x_corect, y_corect, z, speed=speed, wait=wait)
         time.sleep(1)
-        
+
         # slide down to Z position
         z_coor = z
         status = False
         while (status != True):
             z_coor = z_coor - 1
-            self.move_robot(x_end, y_end, z_coor, speed=speed/3, wait=wait)
+            self.move_robot(x_faulty, y_faulty, z_coor, speed=speed/3, wait=wait)
             status = self.swift.get_limit_switch()
 
         # turn off pump
         self.pump(False)
         time.sleep(1)
-        self.move_robot(x_end, y_end, z, speed=speed, wait=wait)
+        self.move_robot(x_faulty, y_faulty, z, speed=speed, wait=wait)
         time.sleep(1)
         self.default_position()
+
+        return 'Done'
 
     def robot_test_move(self, input_marker_id, coordinate_marker_for_robot):
         """
@@ -149,10 +167,10 @@ if __name__ == '__main__':
     time.sleep(2)
     robot.default_position()
     print(f'Posotion: {robot.get_position()}')
-    time.sleep(5)
-    robot.detact_robot()
-    time.sleep(3)
-    # robot.attach_robot()
-    print(f'Position: {robot.get_position()}')
+    # time.sleep(5)
+    # robot.detact_robot()
+    # time.sleep(3)
+    # # robot.attach_robot()
+    # print(f'Position: {robot.get_position()}')
     # robot.test_robot()
 
