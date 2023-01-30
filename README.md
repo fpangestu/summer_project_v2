@@ -271,10 +271,6 @@ After you Calibrate the Camera, Robot and Test it, you can finally try to move t
 
 What you have to do after you place the object inside the area is show a hand gesture in front of the camera and hold your position for three seconds. After three seconds, the robot will pick the object based on the hand gesture you show and move it in a specific position.
 
-| ![](https://github.com/mahasiswateladan/summer_project/blob/main/img/Screenshot%20(870).png) |
-|:--:| 
-| *Figure 23. Result* |
-
 
 
 # Limitation
