@@ -248,7 +248,7 @@ This step aims to get the robot coordinate of the marker we choose. We will sele
 This step is mandatory for you to do because, in this step, we will test our calibration. In this step, we will give the command to the robot to move to the specific ArUco marker. After the command is sent, the robot will move to the marker and touch it, so you must place the ArUco board in front of the robot again (Figure 16). **Ensure the robot's position and the ArUco board are in the same position as we calibrate the robot.**
  1. Make sure you already calibrate the Camera and the Robot, and don’t forget to connect the robot to the computer or laptop
 
-| ![](https://github.com/mahasiswateladan/summer_project/blob/main/img/figure20.PNG) |
+| ![](https://github.com/mahasiswateladan/summer_project_v2/blob/main/img/figure20.PNG) |
 |:--:| 
 | *Figure 20. Status of the Calibration* |
 
