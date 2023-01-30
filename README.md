@@ -147,7 +147,7 @@ This step aims to determine the geometric parameters of the image formation proc
 	See **Figure 6** for the detail.
 > **Note: If you are using the ArUco board that is given in this tutorial, you don’t have to change the parameters**
 
-| ![](https://github.com/mahasiswateladan/summer_project/blob/main/img/figure6.PNG) |
+| ![](https://github.com/mahasiswateladan/summer_project/blob/main/img/aruco_template_desc.PNG) |
 |:--:| 
 | *Figure 6. Parameter Explanation* |
 
