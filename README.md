@@ -104,7 +104,7 @@ To do hand gesture recognition, we used the [MediaPipe Python framework](https:/
 
 The application allows you to control a robot using hand gestures. As you can see in _Figure 1,_ the application used two cameras as the input, the first camera pointed to the user and the second to the robot. The first camera will capture the user’s hand gesture, and the second camera will capture the object. Both cameras will capture images in real-time and send the frame to the application. The application will process the frame, for the first camera, it will recognize the user’s hand gesture which we will use as a command for the robot, and for the second camera, it will identify the object inside the blue area in the frame. The application will calculate the coordinate of every object in the blue area in the frame and convert it from an image coordinate to a real-world coordinate for the robot. The robot will grab an object based on a hand gesture from the user and move it to the specific coordinate. The application will recognize only four hand gestures you can see in _Figure 2_, and for every hand gesture will be assigned only one object, as you can see at the bottom of _Figure 1_. If there are more than four objects in the frame, the application will sort all the objects and show object number one until four. After one object moves, the rank will keep updating until there is no more object in the frame.
 
-| ![Hand Gesture](https://github.com/mahasiswateladan/summer_project/blob/main/img/handgesture.PNG) |
+| ![Hand Gesture](https://github.com/mahasiswateladan/summer_project_v2/blob/main/img/handgesture.PNG) |
 |:--:| 
 | *Figure 2. Hand Gesture* |
 
