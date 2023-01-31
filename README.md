@@ -98,7 +98,7 @@ To do hand gesture recognition, we used the [MediaPipe Python framework](https:/
 
 # Tutorial
 ## Introduction
-| ![Application Interface](https://github.com/mahasiswateladan/summer_project_v2/blob/main/img/Screenshot%20(834).png) |
+| ![Application Interface](https://github.com/mahasiswateladan/summer_project_v2/blob/main/img/Screenshot%20(834).PNG) |
 |:--:| 
 | *Figure 1. Application Interface* |
 
