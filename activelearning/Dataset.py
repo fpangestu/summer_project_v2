@@ -20,8 +20,8 @@ class Dataset:
         return self.features, self.labels
 
     def add_data(self, features, label):
-        #print(features)
-        #print(label)
+        print(features)
+        print(label)
         if self.features is None:
             self.features = np.copy(features)
             self.labels = np.copy(label)

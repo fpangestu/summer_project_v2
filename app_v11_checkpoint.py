@@ -55,9 +55,9 @@ class MainWidget(GridLayout):
         self.camera_cv_obj.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.camera_cv_obj.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-        self.camera_cv_obj_2 = cv2.VideoCapture('http://192.168.137.97:8080/video')
-        self.camera_cv_obj_2.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        self.camera_cv_obj_2.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        # self.camera_cv_obj_2 = cv2.VideoCapture('http://192.168.137.97:8080/video')
+        # self.camera_cv_obj_2.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        # self.camera_cv_obj_2.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         
         # Read data from save file
         self.camera_tvec_id = self.read_coor_from_file("camera_tvec_id")
@@ -482,12 +482,12 @@ class MainWidget(GridLayout):
         if (self.camera_calib_stat == 0):
             self.image.texture, gesture_status = self.camera.load_camera_1(self.camera_cv)
             self.image_2.texture, obj_position, obj_texture, tgt_position = self.camera.load_camera_2(self.camera_cv_obj)
-            self.image_3.texture, prob = self.camera.load_camera_3(self.camera_cv_obj_2)
+            self.image_3.texture, prob = self.camera.load_camera_3(self.camera_cv_obj)
         
             # print(f'Object Position: {obj_position}')
             # print(f'Box Position: {box_position}')
             # print(f'Object Texture: {obj_texture}')
-            # print(f'Probability: {prob}')
+            print(f'Probability: {prob}')
             # target_position = {0: (0, 0), 1: (467, 235), 2: (385, 174), 3: (524, 140), 4: (437, 64)}
             # coor_x, coor_y, coor_x_dest, coor_y_dest = self.camera.final_calculation(1, obj_position, target_position, self.marker_coordinate_id, self.coordinate_marker_for_robot)
             # print(f'Object Coordinate: {(coor_x, coor_y)}')
@@ -922,7 +922,4 @@ class MyApp(App):
         return MainWidget()
 
 if __name__ == '__main__':
-    main = MainWidget()
-    thread = threading.Thread(target=main.execute_commands)
-    thread.start()
     MyApp().run()

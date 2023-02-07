@@ -21,11 +21,12 @@ class Camera:
     def __init__(self):
         self.mediapipe = Mediapipe()
         
-        #active learning
-        model = DecisionModel()
-        ds = Dataset("./dataset/")
+        # #active learning
 
-        self.activeAgent = ActiveLearningClassifier(model, ds)
+        # model = DecisionModel()
+        # ds = Dataset("./dataset/")
+
+        # self.activeAgent = ActiveLearningClassifier(model, ds)
 
     def main(self):
         pass
@@ -69,8 +70,8 @@ class Camera:
             2. ROI of image (texture): Portioan of image that contain object
         """
         # if(camera_cv_obj.isOpened()):
-        ret, frame = camera_cv_obj.read()  
-        # frame = cv2.imread('match+box.jpg')
+        # ret, frame = camera_cv_obj.read()  
+        frame = cv2.imread('match+box.jpg')
 
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)                                      # Convert into gray
 
@@ -199,9 +200,48 @@ class Camera:
             1. image texture (texture): Image texture that contain area for placec object
             2. ROI of image (texture): Portioan of image that contain object
         """
-        ret, frame = camera_cv_obj.read()  
-        # frame = cv2.imread('box1.jpg')
-        # prob = self.activeAgent.predict_or_request_label(frame)
+        # ret, frame = camera_cv_obj.read()  
+        frame = cv2.imread('activelearning\dataset\1.png')
+        
+        # calculate prob
+        # mnist = tfds.load('mnist', split='test', shuffle_files=True, as_supervised=True)        
+
+        # model = DecisionModel()
+        # ds = Dataset("data/")
+        # y = np.array([d[1].numpy() for d in mnist])
+        # x = np.array([d[0].numpy() for d in mnist])
+
+        # x=x[y<2,...]
+        # y=y[y<2]
+        # split_idx = 32
+
+        # activeAgent = ActiveLearningClassifier(model, ds)
+
+        # imgs = model.encode_images(x[:split_idx, ...].repeat(3, axis=-1))
+        # print(imgs.shape)
+        # for i in range(split_idx):
+        #     ds.add_data(imgs[i, ...].reshape(1, -1), np.array([y[i], ]))
+
+        # activeAgent.retrain()
+
+        # correct = 0
+        # unknown = 0
+        # for i in range(1000):
+        #     label = activeAgent.predict_or_request_label(x[split_idx + i, ...].repeat(3, axis=-1)[None, ...])
+        #     if label is not None:
+        #         if np.argmax(label) == y[split_idx + i]:
+        #             correct += 1
+        #     else:
+        #         unknown += 1
+
+        #     ds.add_data(model.encode_images(x[split_idx + i, ...].repeat(3, axis=-1)[None, ...]).reshape(1, -1),
+        #                 np.array([y[split_idx + i], ]))
+
+        #     if i%100==0:
+        #         activeAgent.retrain()
+
+        # print(correct, unknown)        
+        
         buffer = cv2.flip(frame, 0).tostring()
         texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
         texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
@@ -781,18 +821,25 @@ class Camera:
             cv2.imshow('image', img)
 
 if __name__ == '__main__':
-    camera_cv= cv2.VideoCapture('http://192.168.137.97:8080/video')
-    camera_cv.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    camera_cv.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    frame = cv2.imread('activelearning\dataset\img1.png')
+    cv2.imshow('image', frame)
+    # wait for a key to be pressed to exit
+    cv2.waitKey(0)
+
+    # close the window
+    cv2.destroyAllWindows()
+    # camera_cv= cv2.VideoCapture('http://192.168.137.97:8080/video')
+    # camera_cv.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    # camera_cv.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
     
-    while True:
-        ret, img = camera_cv.read()
-        cv2.imshow('image', img)
-        # wait for a key to be pressed to exit
-        cv2.waitKey(0)
+    # while True:
+    #     ret, img = camera_cv.read()
+    #     cv2.imshow('image', img)
+    #     # wait for a key to be pressed to exit
+    #     cv2.waitKey(0)
     
-        # close the window
-        cv2.destroyAllWindows()
+    #     # close the window
+    #     cv2.destroyAllWindows()
 
     # camera = Camera()
     # frame = camera.load_camera_3(camera_cv)
