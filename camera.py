@@ -9,10 +9,6 @@ import sys
 from kivy.graphics.texture import Texture
 sys.path.insert(0, 'D:/4_KULIAH_S2/Summer_Project/summer_project_v2/mediapipe')
 from mdp_main import Mediapipe
-sys.path.insert(0, 'D:/4_KULIAH_S2/Summer_Project/summer_project_v2/activelearning')
-from ActiveLearning import ActiveLearningClassifier
-from DecisionModel import DecisionModel
-from Dataset import Dataset
 import tensorflow_datasets as tfds
 from PIL import Image
 
@@ -20,7 +16,6 @@ from PIL import Image
 class Camera:
     def __init__(self):
         self.mediapipe = Mediapipe()
-        
         # #active learning
 
         # model = DecisionModel()
@@ -47,6 +42,7 @@ class Camera:
         # frame = cv2.imread('cardbox.jpg')
 
         # Hand Gesture
+        gesture_status = ''
         mdp_frame, gesture_status = self.mediapipe.main(frame)
 
         # Convert frame into texture for Kivy
@@ -201,117 +197,13 @@ class Camera:
             2. ROI of image (texture): Portioan of image that contain object
         """
         # ret, frame = camera_cv_obj.read()  
-        frame = cv2.imread('activelearning\dataset\1.png')
-        
-        # calculate prob
-        # mnist = tfds.load('mnist', split='test', shuffle_files=True, as_supervised=True)        
-
-        # model = DecisionModel()
-        # ds = Dataset("data/")
-        # y = np.array([d[1].numpy() for d in mnist])
-        # x = np.array([d[0].numpy() for d in mnist])
-
-        # x=x[y<2,...]
-        # y=y[y<2]
-        # split_idx = 32
-
-        # activeAgent = ActiveLearningClassifier(model, ds)
-
-        # imgs = model.encode_images(x[:split_idx, ...].repeat(3, axis=-1))
-        # print(imgs.shape)
-        # for i in range(split_idx):
-        #     ds.add_data(imgs[i, ...].reshape(1, -1), np.array([y[i], ]))
-
-        # activeAgent.retrain()
-
-        # correct = 0
-        # unknown = 0
-        # for i in range(1000):
-        #     label = activeAgent.predict_or_request_label(x[split_idx + i, ...].repeat(3, axis=-1)[None, ...])
-        #     if label is not None:
-        #         if np.argmax(label) == y[split_idx + i]:
-        #             correct += 1
-        #     else:
-        #         unknown += 1
-
-        #     ds.add_data(model.encode_images(x[split_idx + i, ...].repeat(3, axis=-1)[None, ...]).reshape(1, -1),
-        #                 np.array([y[split_idx + i], ]))
-
-        #     if i%100==0:
-        #         activeAgent.retrain()
-
-        # print(correct, unknown)        
+        frame = cv2.imread('D:/4_KULIAH_S2/Summer_Project/summer_project_v2/activelearning/dataset/0/img1.png') 
         
         buffer = cv2.flip(frame, 0).tostring()
         texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
         texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
 
-        return texture, 1
-
-        # if(camera_cv_obj.isOpened()):
-        #     ret, frame = camera_cv_obj.read()  
-        #     # frame = cv2.imread('box3.jpg')
-        #     # h, w, channels = frame.shape
-        #     # half = w//2
-        #     # # this will be the second column
-        #     # frame = frame[:, half:]   
-
-        #     # Find Color
-        #     # img_blur = cv2.GaussianBlur(frame, (5, 5), 20)
-            
-        #     # frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)                                      # Convert into gray
-
-        #     # # lower bound and upper bound for Green color
-        #     # lower_bound = np.array([5, 30, 30])	 
-        #     # upper_bound = np.array([20, 255, 255])
-
-        #     # # find the colors within the boundaries
-        #     # mask = cv2.inRange(frame_hsv, lower_bound, upper_bound)
-        #     # ###############     Remove Noise         ###############
-        #     # # Create small kernel 
-        #     # kernel = np.ones((7, 7), np.uint8)
-            
-        #     # # Remove unnecessary noise from mask
-        #     # mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-        #     # mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-
-            
-        #     # # Segment only the detected region
-        #     # segmented_img = cv2.bitwise_and(frame, frame, mask=mask)
-
-        #     # # return mask
-        #     # ###############     Find Contour          ###############
-        #     # c_number = 0
-        #     # box_position = {}
-        #     # contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)         # Get the contours and the hierarchy of the object in the frame
-            
-        #     # for i, c in enumerate(contours):
-        #     #     # if the contour has no other contours inside of it
-        #     #     if hierarchy[0][i][2] == -1 :
-        #     #         # if the size of the contour is greater than a threshold
-        #     #         if  cv2.contourArea(c) > 3000:
-        #     #             box = cv2.minAreaRect(c)                    
-        #     #             (x, y), (width, height), angle = box  
-
-        #     #             c_number += 1
-        #     #             rect = cv2.boxPoints(box)
-        #     #             box = np.int0(rect)
-        #     #             frame = cv2.drawContours(frame, [box], 0, (0, 0, 255), 2)
-        #     #             str_object_name = "Box " + str(c_number)
-        #     #             cv2.putText(frame, str_object_name, (box[0][0] - 5, box[0][1] - 5), 0, 0.3, (0, 255, 0))
-        #     #             cv2.circle(frame, (int(x), int(y)), 4, (0, 255, 0), -1)       # Draw circle in the middle of contour
-        #     #             str_object = str(round(x, 2)) + ", " + str(round(y, 2))
-        #     #             cv2.putText(frame, str_object, (int(x), int(y) + 10), 0, 0.3, (0, 0, 255))
-        #     #             box_position[c_number] = (int(x), int(y))
-
-        #     # Convert frame into texture for Kivy
-        #     # return frame
-        #     buffer = cv2.flip(frame, 0).tostring()
-        #     texture = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
-        #     texture.blit_buffer(buffer, colorfmt='bgr', bufferfmt='ubyte')
-        #     # self.image_2.texture = texture
-            
-        #     return texture
+        return texture, frame
 
     def load_camera_calib(self, camera_cv_obj):
         """
@@ -617,6 +509,239 @@ class Camera:
             # self.status_marker_coordinate.text = self.inf_status_marker_coordinate
 
             return camera_tvec, camera_tvec_id, camera_tvec_coor, marker_coordinate_id, marker_id, marker_coordinate, inf_status_marker_coordinate, src
+    
+    def final_calculation_obj(self, position, obj_position, tgt_position, marker_coordinate_id, coordinate_marker_for_robot):
+        """
+        Calculating object coordinate in the frame for robot cordiate 
+
+        Args:
+            coordinate_marker_for_robot (dict) :  Dictionary of robot coordinate for every Marker (ID and Coordinate)
+            marker_coordinate_id (dict) : Dictionary for every Marker ccenter coordinate (ID and Coordinate)
+
+        Returns:
+            Robot coordinate (X, Y, Z)
+        """
+        coor_marker1 = marker_coordinate_id[10]
+        coor_marker2 = marker_coordinate_id[12]
+        coor_marker3 = marker_coordinate_id[16]
+        coor_rbt1 = coordinate_marker_for_robot[10]
+        coor_rbt2 = coordinate_marker_for_robot[12]
+        coor_rbt3 = coordinate_marker_for_robot[16]
+
+        # Calculate Different X & Y
+        diff_marker_y = abs(coor_marker1[0] - coor_marker2[0])
+        diff_rbt_y = abs(coor_rbt1[1] - coor_rbt2[1])
+        diff_y = diff_rbt_y/diff_marker_y
+
+        diff_marker_x = abs(coor_marker1[1] - coor_marker3[1])
+        diff_rbt_x = abs(coor_rbt1[0] - coor_rbt3[0])
+        diff_x = diff_rbt_x/diff_marker_x
+        # print(f'Marker: {diff_marker_y}, Robot: {diff_rbt_y}, Different X: {diff_x}, Different Y: {diff_y}')
+
+        # Zero Coordinate
+        coor_zero = coor_marker1[0] + coor_rbt1[1] * diff_y
+        # print(f'Zero: {coor_zero}')
+
+        # Object Coordinate
+        corr_obj = obj_position[position]
+        coor_new = [corr_obj[0], corr_obj[1]]
+
+        # Coordinate
+        coor_correct = tgt_position[0]
+        coor_faulty = tgt_position[1]
+        coor_cmr = tgt_position[2]
+        
+
+        # Object Position
+        # Y Coordinate
+        if(coor_new[0] > coor_marker1[0]):
+            coor_y = abs(coor_marker1[0] - coor_new[0])
+            coor_y = coor_y * diff_y
+            coor_y = coor_rbt1[1] - coor_y
+            # print(coor)
+        else:
+            coor_y = abs(coor_marker1[0] - coor_new[0])
+            coor_y = coor_y * diff_y
+            coor_y = coor_rbt1[1] + coor_y
+            # print(coor)
+
+        # X Coordinate
+        if(coor_new[1] > coor_marker1[1]):
+            coor_x = abs(coor_marker1[1] - coor_new[1])
+            coor_x = coor_x * diff_x
+            coor_x = coor_rbt1[0] - coor_x
+            # print(coor)
+        else:
+            coor_x = abs(coor_marker1[1] - coor_new[1])
+            coor_x = coor_x * diff_x
+            coor_x = coor_rbt1[0] + coor_x
+            # print(coor)
+
+        return coor_x, coor_y
+    
+    def final_calculation_camera(self, position, obj_position, tgt_position, marker_coordinate_id, coordinate_marker_for_robot):
+        """
+        Calculating object coordinate in the frame for robot cordiate 
+
+        Args:
+            coordinate_marker_for_robot (dict) :  Dictionary of robot coordinate for every Marker (ID and Coordinate)
+            marker_coordinate_id (dict) : Dictionary for every Marker ccenter coordinate (ID and Coordinate)
+
+        Returns:
+            Robot coordinate (X, Y, Z)
+        """
+        coor_marker1 = marker_coordinate_id[10]
+        coor_marker2 = marker_coordinate_id[12]
+        coor_marker3 = marker_coordinate_id[16]
+        coor_rbt1 = coordinate_marker_for_robot[10]
+        coor_rbt2 = coordinate_marker_for_robot[12]
+        coor_rbt3 = coordinate_marker_for_robot[16]
+
+        # Calculate Different X & Y
+        diff_marker_y = abs(coor_marker1[0] - coor_marker2[0])
+        diff_rbt_y = abs(coor_rbt1[1] - coor_rbt2[1])
+        diff_y = diff_rbt_y/diff_marker_y
+
+        diff_marker_x = abs(coor_marker1[1] - coor_marker3[1])
+        diff_rbt_x = abs(coor_rbt1[0] - coor_rbt3[0])
+        diff_x = diff_rbt_x/diff_marker_x
+        # print(f'Marker: {diff_marker_y}, Robot: {diff_rbt_y}, Different X: {diff_x}, Different Y: {diff_y}')
+
+        # Zero Coordinate
+        coor_zero = coor_marker1[0] + coor_rbt1[1] * diff_y
+        # print(f'Zero: {coor_zero}')
+
+        # Object Coordinate
+        corr_obj = obj_position[position]
+        coor_new = [corr_obj[0], corr_obj[1]]
+
+        # Coordinate
+        coor_correct = tgt_position[0]
+        coor_faulty = tgt_position[1]
+        coor_cmr = tgt_position[2]
+
+        # Camera Position
+        # Y Coordinate
+        if(coor_cmr[0] > coor_marker1[0]):
+            cmr_coor_y = abs(coor_marker1[0] - coor_cmr[0])
+            cmr_coor_y = cmr_coor_y * diff_y
+            cmr_coor_y = coor_rbt1[1] - cmr_coor_y
+            # print(coor)
+        else:
+            cmr_coor_y = abs(coor_marker1[0] - coor_cmr[0])
+            cmr_coor_y = cmr_coor_y * diff_y
+            cmr_coor_y = coor_rbt1[1] + cmr_coor_y
+            # print(coor)
+
+        # X Coordinate
+        if(coor_cmr[1] > coor_marker1[1]):
+            cmr_coor_x = abs(coor_marker1[1] - coor_cmr[1])
+            cmr_coor_x = cmr_coor_x * diff_x
+            cmr_coor_x = coor_rbt1[0] - cmr_coor_x
+            # print(coor)
+        else:
+            cmr_coor_x = abs(coor_marker1[1] - coor_cmr[1])
+            cmr_coor_x = cmr_coor_x * diff_x
+            cmr_coor_x = coor_rbt1[0] + cmr_coor_x
+            # print(coor)
+        
+        return cmr_coor_x, cmr_coor_y
+    
+    def final_calculation_target(self, position, obj_position, tgt_position, marker_coordinate_id, coordinate_marker_for_robot, target):
+        """
+        Calculating object coordinate in the frame for robot cordiate 
+
+        Args:
+            coordinate_marker_for_robot (dict) :  Dictionary of robot coordinate for every Marker (ID and Coordinate)
+            marker_coordinate_id (dict) : Dictionary for every Marker ccenter coordinate (ID and Coordinate)
+
+        Returns:
+            Robot coordinate (X, Y, Z)
+        """
+        coor_marker1 = marker_coordinate_id[10]
+        coor_marker2 = marker_coordinate_id[12]
+        coor_marker3 = marker_coordinate_id[16]
+        coor_rbt1 = coordinate_marker_for_robot[10]
+        coor_rbt2 = coordinate_marker_for_robot[12]
+        coor_rbt3 = coordinate_marker_for_robot[16]
+
+        # Calculate Different X & Y
+        diff_marker_y = abs(coor_marker1[0] - coor_marker2[0])
+        diff_rbt_y = abs(coor_rbt1[1] - coor_rbt2[1])
+        diff_y = diff_rbt_y/diff_marker_y
+
+        diff_marker_x = abs(coor_marker1[1] - coor_marker3[1])
+        diff_rbt_x = abs(coor_rbt1[0] - coor_rbt3[0])
+        diff_x = diff_rbt_x/diff_marker_x
+        # print(f'Marker: {diff_marker_y}, Robot: {diff_rbt_y}, Different X: {diff_x}, Different Y: {diff_y}')
+
+        # Zero Coordinate
+        coor_zero = coor_marker1[0] + coor_rbt1[1] * diff_y
+        # print(f'Zero: {coor_zero}')
+
+        # Object Coordinate
+        corr_obj = obj_position[position]
+        coor_new = [corr_obj[0], corr_obj[1]]
+
+        # Coordinate
+        coor_correct = tgt_position[0]
+        coor_faulty = tgt_position[1]
+        coor_cmr = tgt_position[2]
+
+        if(target == "correct"):
+            # Target Position Correct
+            # Y Coordinate
+            if(coor_correct[0] > coor_marker1[0]):
+                correct_coor_y = abs(coor_marker1[0] - coor_correct[0])
+                correct_coor_y = correct_coor_y * diff_y
+                correct_coor_y = coor_rbt1[1] - correct_coor_y
+                # print(coor)
+            else:
+                correct_coor_y = abs(coor_marker1[0] - coor_correct[0])
+                correct_coor_y = correct_coor_y * diff_y
+                correct_coor_y = coor_rbt1[1] + correct_coor_y
+                # print(coor)
+
+            # X Coordinate
+            if(coor_correct[1] > coor_marker1[1]):
+                correct_coor_x = abs(coor_marker1[1] - coor_correct[1])
+                correct_coor_x = correct_coor_x * diff_x
+                correct_coor_x = coor_rbt1[0] - correct_coor_x
+                # print(coor)
+            else:
+                correct_coor_x = abs(coor_marker1[1] - coor_correct[1])
+                correct_coor_x = correct_coor_x * diff_x
+                correct_coor_x = coor_rbt1[0] + correct_coor_x
+                # print(coor)
+            
+            return correct_coor_x, correct_coor_y
+        else:
+            # Target Position Faulty
+            # Y Coordinate
+            if(coor_faulty[0] > coor_marker1[0]):
+                faulty_coor_y = abs(coor_marker1[0] - coor_faulty[0])
+                faulty_coor_y = faulty_coor_y * diff_y
+                faulty_coor_y = coor_rbt1[1] - faulty_coor_y
+                # print(coor)
+            else:
+                faulty_coor_y = abs(coor_marker1[0] - coor_faulty[0])
+                faulty_coor_y = faulty_coor_y * diff_y
+                faulty_coor_y = coor_rbt1[1] + faulty_coor_y
+                # print(coor)
+
+            # X Coordinate
+            if(coor_faulty[1] > coor_marker1[1]):
+                faulty_coor_x = abs(coor_marker1[1] - coor_faulty[1])
+                faulty_coor_x = faulty_coor_x * diff_x
+                faulty_coor_x = coor_rbt1[0] - faulty_coor_x
+                # print(coor)
+            else:
+                faulty_coor_x = abs(coor_marker1[1] - coor_faulty[1])
+                faulty_coor_x = faulty_coor_x * diff_x
+                faulty_coor_x = coor_rbt1[0] + faulty_coor_x
+                # print(coor)
+            
+            return faulty_coor_x, faulty_coor_y
 
     def final_calculation(self, position, obj_position, tgt_position, marker_coordinate_id, coordinate_marker_for_robot):
         """
@@ -710,7 +835,7 @@ class Camera:
             cmr_coor_x = coor_rbt1[0] + cmr_coor_x
             # print(coor)
 
-        # Target Position
+        # Target Position Correct
         # Y Coordinate
         if(coor_correct[0] > coor_marker1[0]):
             correct_coor_y = abs(coor_marker1[0] - coor_correct[0])
@@ -735,6 +860,7 @@ class Camera:
             correct_coor_x = coor_rbt1[0] + correct_coor_x
             # print(coor)
 
+        # Target Position Faulty
         # Y Coordinate
         if(coor_faulty[0] > coor_marker1[0]):
             faulty_coor_y = abs(coor_marker1[0] - coor_faulty[0])

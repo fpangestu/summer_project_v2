@@ -41,24 +41,21 @@ for i in range(split_idx):
 
 activeAgent.retrain()
 
-print(x[split_idx + i, ...].repeat(3, axis=-1)[None, ...])
-print(x[split_idx + i, ...].repeat(3, axis=-1)[None, ...].shape)
+correct = 0
+unknown = 0
+for i in range(1000):
+    label = activeAgent.predict_or_request_label(x[split_idx + i, ...].repeat(3, axis=-1)[None, ...])
+    if label is not None:
+        if np.argmax(label) == y[split_idx + i]:
+            correct += 1
+    else:
+        unknown += 1
 
-# correct = 0
-# unknown = 0
-# for i in range(1000):
-#     label = activeAgent.predict_or_request_label(x[split_idx + i, ...].repeat(3, axis=-1)[None, ...])
-#     if label is not None:
-#         if np.argmax(label) == y[split_idx + i]:
-#             correct += 1
-#     else:
-#         unknown += 1
+    ds.add_data(model.encode_images(x[split_idx + i, ...].repeat(3, axis=-1)[None, ...]).reshape(1, -1),
+                np.array([y[split_idx + i], ]))
 
-#     ds.add_data(model.encode_images(x[split_idx + i, ...].repeat(3, axis=-1)[None, ...]).reshape(1, -1),
-#                 np.array([y[split_idx + i], ]))
+    if i%100==0:
+        activeAgent.retrain()
 
-#     if i%100==0:
-#         activeAgent.retrain()
-
-# print(correct, unknown)
+print(correct, unknown)
 

@@ -56,7 +56,98 @@ class Robot:
 
         self.swift.set_wrist(90)
 
-    def move_object(self, x_start, y_start, x_cmr, y_cmr, x_corect, y_corect, x_faulty, y_faulty, z=120, speed=1500, wait=True):
+    def move_object_to_camera(self, x_start, y_start, x_cmr, y_cmr, z=120, speed=1500, wait=True):
+        """
+        Move object from original position to desire position
+
+        Args:
+            x_start (float) : original X coordinate 
+            y_start (float) : original Y coordinate  
+            z_start (float) : original Z coordinate   
+            x_end (float) : Desire X coordinate  
+            y_end (float) : Desire Y coordinate   
+            z_end (float) : Desire Z coordinate   
+            speed (int) : How fast robot movement
+            wait (int) : Delay for every movement
+
+        Returns:
+            Robot coordinate (X, Y, Z)
+        """
+        # X, Y, Z, SPEED
+        
+        # Go to object
+        print('Go to Object')
+        print(f'X: {x_start}, Y: {y_start}')
+        self.move_robot(x_start, y_start, z, speed=speed, wait=wait)
+        time.sleep(1)
+
+        # slide down to Z position
+        z_coor = z
+        status = False
+        while (status != True):
+            z_coor = z_coor - 1
+            self.move_robot(x_start, y_start, z_coor, speed=speed/3, wait=wait)
+            status = self.swift.get_limit_switch()
+
+        # turn on pump
+        time.sleep(1)
+        self.pump(True)
+        time.sleep(1)
+        # self.swift.set_position(self.robot_parkir[0], self.robot_parkir[1], self.robot_parkir[2], speed=speed, wait=wait)
+        self.move_robot(x_start, y_start, z, speed=speed, wait=wait)
+        time.sleep(1)
+
+        # Go to Camera
+        print('Go to Camera')
+        print(f'X: {x_cmr}, Y: {y_cmr}')
+        self.move_robot(x_cmr, y_cmr, z, speed=speed, wait=wait)
+        # time.sleep(5)
+
+        return 'Done'
+    
+    def move_object_to_destination(self, x_targer, y_target, z=120, speed=1500, wait=True):
+        """
+        Move object from original position to desire position
+
+        Args:
+            x_start (float) : original X coordinate 
+            y_start (float) : original Y coordinate  
+            z_start (float) : original Z coordinate   
+            x_end (float) : Desire X coordinate  
+            y_end (float) : Desire Y coordinate   
+            z_end (float) : Desire Z coordinate   
+            speed (int) : How fast robot movement
+            wait (int) : Delay for every movement
+
+        Returns:
+            Robot coordinate (X, Y, Z)
+        """
+        # X, Y, Z, SPEED
+        # Go to Destination
+        self.move_robot(200, 0, z, speed=speed, wait=wait)
+        print('Go to Destination')
+        print(f'X: {x_targer}, Y: {y_target}')
+        self.move_robot(x_targer, y_target, z, speed=speed, wait=wait)
+        time.sleep(1)
+
+        # slide down to Z position
+        z_coor = z
+        status = False
+        while (status != True):
+            z_coor = z_coor - 1
+            self.move_robot(x_targer, y_target, z_coor, speed=speed/3, wait=wait)
+            status = self.swift.get_limit_switch()
+
+        # turn off pump
+        self.pump(False)
+        time.sleep(1)
+        self.move_robot(x_targer, y_target, z, speed=speed, wait=wait)
+        time.sleep(1)
+        self.default_position()
+
+        return 'Done'
+
+    def move_object(self, x_start, y_start, x_cmr, y_cmr, x_targer, y_target, z=120, speed=1500, wait=True):
         """
         Move object from original position to desire position
 
@@ -103,14 +194,11 @@ class Robot:
         self.move_robot(x_cmr, y_cmr, z, speed=speed, wait=wait)
         time.sleep(5)
 
-        ## Check Object
-
-
         # Go to Destination
         self.move_robot(200, 0, z, speed=speed, wait=wait)
         print('Go to Destination')
-        print(f'X: {x_corect}, Y: {y_corect}')
-        self.move_robot(x_corect, y_corect, z, speed=speed, wait=wait)
+        print(f'X: {x_targer}, Y: {y_target}')
+        self.move_robot(x_targer, y_target, z, speed=speed, wait=wait)
         time.sleep(1)
 
         # slide down to Z position
@@ -118,13 +206,13 @@ class Robot:
         status = False
         while (status != True):
             z_coor = z_coor - 1
-            self.move_robot(x_faulty, y_faulty, z_coor, speed=speed/3, wait=wait)
+            self.move_robot(x_targer, y_target, z_coor, speed=speed/3, wait=wait)
             status = self.swift.get_limit_switch()
 
         # turn off pump
         self.pump(False)
         time.sleep(1)
-        self.move_robot(x_faulty, y_faulty, z, speed=speed, wait=wait)
+        self.move_robot(x_targer, y_target, z, speed=speed, wait=wait)
         time.sleep(1)
         self.default_position()
 
